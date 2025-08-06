@@ -678,7 +678,6 @@
             try {
                 // Create PDF
                 const { jsPDF } = window.jspdf;
-                const doc = new jsPDF();
                 
                 // Get settings
                 const pageSize = document.getElementById('pageSize').value;
@@ -691,50 +690,110 @@
                 const imageSpacing = parseInt(document.getElementById('imageSpacing').value);
                 const imageScaling = document.getElementById('imageScaling').value;
                 
-                // Set initial page
-                let currentPage = 1;
+                // Initialize PDF
+                const doc = new jsPDF({
+                    orientation: orientation,
+                    unit: 'mm',
+                    format: pageSize
+                });
+                
+                // Calculate dimensions
+                let pageWidth = doc.internal.pageSize.getWidth();
+                let pageHeight = doc.internal.pageSize.getHeight();
                 
                 // Process images
                 for (let i = 0; i < uploadedImages.length; i++) {
-                    const img = uploadedImages[i];
+                    const imgData = uploadedImages[i].src;
                     
-                    // Add new page after the first
-                    if (i > 0) {
-                        doc.addPage();
-                        currentPage++;
+                    // Create an image element to get dimensions
+                    const img = new Image();
+                    img.src = imgData;
+                    
+                    // Wait for image to load
+                    await new Promise((resolve) => {
+                        img.onload = resolve;
+                    });
+                    
+                    // Calculate dimensions to fit the page
+                    let imgWidth = img.width;
+                    let imgHeight = img.height;
+                    const pageContentWidth = pageWidth - 2 * imageSpacing;
+                    const pageContentHeight = pageHeight - 2 * imageSpacing;
+                    
+                    // Adjust for rotation if any
+                    const rotation = uploadedImages[i].rotation || 0;
+                    if (rotation === 90 || rotation === 270) {
+                        [imgWidth, imgHeight] = [imgHeight, imgWidth];
                     }
                     
-                    // Add image to PDF
-                    // In a real implementation, we would use jsPDF's addImage method
-                    // Here we simulate with a timeout to show progress
+                    // Calculate scaling
+                    let ratio = 1;
+                    if (imageScaling === 'fit') {
+                        ratio = Math.min(pageContentWidth / imgWidth, pageContentHeight / imgHeight);
+                    } else if (imageScaling === 'fill') {
+                        ratio = Math.max(pageContentWidth / imgWidth, pageContentHeight / imgHeight);
+                    } else { // stretch
+                        ratioX = pageContentWidth / imgWidth;
+                        ratioY = pageContentHeight / imgHeight;
+                        // We'll use the stretch ratio for both dimensions individually later
+                    }
+                    
+                    let targetWidth, targetHeight;
+                    if (imageScaling === 'stretch') {
+                        targetWidth = pageContentWidth;
+                        targetHeight = pageContentHeight;
+                    } else {
+                        targetWidth = imgWidth * ratio;
+                        targetHeight = imgHeight * ratio;
+                    }
+                    
+                    // Center the image
+                    const x = (pageWidth - targetWidth) / 2;
+                    const y = (pageHeight - targetHeight) / 2;
+                    
+                    // Add new page (except the first one)
+                    if (i > 0) {
+                        doc.addPage();
+                    }
+                    
+                    // Add background color
+                    doc.setFillColor(backgroundColor);
+                    doc.rect(0, 0, pageWidth, pageHeight, 'F');
+                    
+                    // Add border if borderWidth > 0
+                    if (borderWidth > 0) {
+                        doc.setDrawColor(borderColor);
+                        doc.setLineWidth(borderWidth);
+                        // Draw rectangle at the image position
+                        doc.rect(x - borderWidth/2, y - borderWidth/2, 
+                                 targetWidth + borderWidth, targetHeight + borderWidth);
+                    }
+                    
+                    // Add the image
+                    doc.addImage(imgData, 'JPEG', x, y, targetWidth, targetHeight, null, 'FAST');
                     
                     // Update progress
                     const progress = Math.floor((i + 1) / uploadedImages.length * 100);
                     progressBar.style.width = `${progress}%`;
                     statusText.textContent = `Processing: ${progress}%`;
-                    
-                    // Add a small delay to simulate processing
-                    await new Promise(resolve => setTimeout(resolve, 100));
                 }
+                
+                // Save the PDF
+                doc.save('converted-images.pdf');
                 
                 // Final update
                 progressBar.style.width = '100%';
                 statusText.textContent = 'Processing complete!';
                 
-                // Simulate download
+                // Reset after download
                 setTimeout(() => {
-                    doc.save('converted-images.pdf');
-                    
-                    // Reset after download
-                    setTimeout(() => {
-                        progressContainer.style.display = 'none';
-                        convertBtn.disabled = false;
-                    }, 2000);
-                }, 500);
+                    progressContainer.style.display = 'none';
+                    convertBtn.disabled = false;
+                }, 2000);
                 
             } catch (error) {
                 console.error('Error creating PDF:', error);
-                alert('An error occurred while creating the PDF.');
+                alert('An error occurred while creating the PDF. Please try again with different images.');
                 progressContainer.style.display = 'none';
                 convertBtn.disabled = false;
             }
