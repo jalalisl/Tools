@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel to PDF Converter</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 100px 20px 40px; /* Added top padding for letter pad space */
+            color: #333;
+        }
+        
+        .letter-pad-space {
+            position: absolute;
+            top: 20px;
+            width: 100%;
+            max-width: 1000px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+        }
+        
+        .letter-pad-space h2 {
+            color: #1a2980;
+            margin-bottom: 10px;
+        }
+        
+        .letter-pad-space p {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            margin-bottom: 30px;
+            margin-top: 60px; /* Added margin for letter pad space */
+        }
+        
+        header {
+            background: linear-gradient(90deg, #1a2980, #26d0ce);
+            color: white;
+            padding: 25px 30px;
+            text-align: center;
+        }
+        
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        
+        .main-content {
+            display: flex;
+            padding: 30px;
+            gap: 30px;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+        }
+        
+        .upload-section {
+            flex: 1;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .preview-section {
+            flex: 1;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .section-title {
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+            color: #1a2980;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .section-title i {
+            font-size: 1.8rem;
+        }
+        
+        .upload-area {
+            border: 3px dashed #1a2980;
+            border-radius: 10px;
+            padding: 40px 20px;
+            text-align: center;
+            background-color: rgba(26, 41, 128, 0.05);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 25px;
+        }
+        
+        .upload-area:hover {
+            background-color: rgba(26, 41, 128, 0.1);
+            transform: translateY(-3px);
+        }
+        
+        .upload-area i {
+            font-size: 4rem;
+            color: #1a2980;
+            margin-bottom: 15px;
+        }
+        
+        .upload-area h3 {
+            color: #1a2980;
+            margin-bottom: 10px;
+        }
+        
+        .upload-area p {
+            color: #666;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .controls {
+            background-color: #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .control-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        select, input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #ced4da;
+            font-size: 1rem;
+            background-color: white;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 14px 28px;
+            background: linear-gradient(90deg, #1a2980, #26d0ce);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn:disabled {
+            background: #adb5bd;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-convert {
+            background: linear-gradient(90deg, #FF512F, #F09819);
+        }
+        
+        .preview-container {
+            height: 400px;
+            overflow: auto;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            background-color: white;
+            padding: 15px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+        }
+        
+        th {
+            background-color: #1a2980;
+            color: white;
+            padding: 12px 15px;
+            text-align: left;
+            position: sticky;
+            top: 0;
+        }
+        
+        td {
+            padding: 10px 15px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        
+        tr:hover {
+            background-color: #e9f7fe;
+        }
+        
+        .status {
+            text-align: center;
+            padding: 20px;
+            font-weight: 600;
+            color: #1a2980;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .features {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 20px;
+            max-width: 1000px;
+        }
+        
+        .feature-card {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            width: 300px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        .feature-card i {
+            font-size: 2.5rem;
+            color: #1a2980;
+            margin-bottom: 15px;
+        }
+        
+        .feature-card h3 {
+            color: #1a2980;
+            margin-bottom: 10px;
+        }
+        
+        .feature-card p {
+            color: #666;
+            line-height: 1.6;
+        }
+        
+        footer {
+            color: white;
+            text-align: center;
+            padding: 20px;
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-top: auto;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .success {
+            color: #28a745;
+        }
+        
+        .error {
+            color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <!-- Letter Pad Space -->
+    <div class="letter-pad-space">
+        <h2>Company Letterhead</h2>
+        <p>ABC Corporation • 123 Business Street, Suite 100 • New York, NY 10001</p>
+        <p>Phone: (555) 123-4567 • Email: info@abccorp.com • www.abccorp.com</p>
+    </div>
+    
+    <div class="container">
+        <header>
+            <h1>Excel to PDF Converter</h1>
+            <p>Convert your Excel spreadsheets to PDF documents with perfectly fitted columns and adjustable font sizes</p>
+        </header>
+        
+        <div class="main-content">
+            <div class="upload-section">
+                <h2 class="section-title">Upload Excel File</h2>
+                
+                <div class="upload-area" id="drop-area">
+                    <i>📊</i>
+                    <h3>Drag & Drop Excel File</h3>
+                    <p>or</p>
+                    <button class="btn" id="browse-btn">Browse Files</button>
+                    <input type="file" id="file-input" class="file-input" accept=".xlsx, .xls">
+                </div>
+                
+                <div class="controls">
+                    <div class="control-group">
+                        <label for="font-size">Font Size</label>
+                        <select id="font-size">
+                            <option value="8">Small (8pt)</option>
+                            <option value="10" selected>Medium (10pt)</option>
+                            <option value="12">Large (12pt)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="page-orientation">Page Orientation</label>
+                        <select id="page-orientation">
+                            <option value="portrait" selected>Portrait</option>
+                            <option value="landscape">Landscape</option>
+                        </select>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="page-size">Page Size</label>
+                        <select id="page-size">
+                            <option value="a4" selected>A4</option>
+                            <option value="letter">Letter</option>
+                            <option value="legal">Legal</option>
+                        </select>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="letter-pad">Letter Pad Space (mm)</label>
+                        <input type="number" id="letter-pad" min="0" max="100" value="40">
+                    </div>
+                    
+                    <button id="convert-btn" class="btn btn-convert" disabled>
+                        Convert to PDF
+                    </button>
+                </div>
+            </div>
+            
+            <div class="preview-section">
+                <h2 class="section-title">Excel Preview</h2>
+                <div class="preview-container" id="preview-container">
+                    <p style="text-align: center; color: #666; padding: 50px 0;">
+                        Upload an Excel file to see a preview here
+                    </p>
+                </div>
+                <div class="status" id="status"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="features">
+        <div class="feature-card">
+            <i>🔍</i>
+            <h3>Smart Auto-Fit</h3>
+            <p>All columns are automatically resized to fit perfectly on a single page without any manual adjustments.</p>
+        </div>
+        
+        <div class="feature-card">
+            <i>📐</i>
+            <h3>Customizable Format</h3>
+            <p>Adjust font size, page orientation, and paper size to match your requirements.</p>
+        </div>
+        
+        <div class="feature-card">
+            <i>⚡</i>
+            <h3>Fast Processing</h3>
+            <p>Convert Excel files to PDF in seconds with our optimized conversion engine.</p>
+        </div>
+    </div>
+    
+    <footer>
+        <p>Excel to PDF Converter Tool | All processing happens locally in your browser - your data never leaves your computer</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM Elements
+            const dropArea = document.getElementById('drop-area');
+            const browseBtn = document.getElementById('browse-btn');
+            const fileInput = document.getElementById('file-input');
+            const convertBtn = document.getElementById('convert-btn');
+            const previewContainer = document.getElementById('preview-container');
+            const statusDiv = document.getElementById('status');
+            const fontSizeSelect = document.getElementById('font-size');
+            const orientationSelect = document.getElementById('page-orientation');
+            const pageSizeSelect = document.getElementById('page-size');
+            const letterPadInput = document.getElementById('letter-pad');
+            
+            let excelData = null;
+            let fileName = '';
+            
+            // Event Listeners
+            browseBtn.addEventListener('click', () => fileInput.click());
+            fileInput.addEventListener('change', handleFileSelect);
+            convertBtn.addEventListener('click', convertToPDF);
+            
+            // Drag and drop functionality
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropArea.addEventListener(eventName, preventDefaults, false);
+            });
+            
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropArea.addEventListener(eventName, highlight, false);
+            });
+            
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropArea.addEventListener(eventName, unhighlight, false);
+            });
+            
+            function highlight() {
+                dropArea.style.borderColor = '#26d0ce';
+                dropArea.style.backgroundColor = 'rgba(38, 208, 206, 0.1)';
+            }
+            
+            function unhighlight() {
+                dropArea.style.borderColor = '#1a2980';
+                dropArea.style.backgroundColor = 'rgba(26, 41, 128, 0.05)';
+            }
+            
+            dropArea.addEventListener('drop', handleDrop, false);
+            
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                
+                if (files.length) {
+                    fileInput.files = files;
+                    handleFileSelect();
+                }
+            }
+            
+            function handleFileSelect() {
+                const file = fileInput.files[0];
+                
+                if (!file) return;
+                
+                fileName = file.name.replace(/\.[^/.]+$/, ""); // Remove extension
+                statusDiv.textContent = `Processing: ${file.name}...`;
+                
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, {type: 'array'});
+                        
+                        // Get the first worksheet
+                        const worksheetName = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[worksheetName];
+                        
+                        // Convert to JSON
+                        excelData = XLSX.utils.sheet_to_json(worksheet, {header: 1});
+                        
+                        // Generate preview
+                        generatePreview(excelData);
+                        
+                        // Enable convert button
+                        convertBtn.disabled = false;
+                        statusDiv.innerHTML = `<span class="success">✅ Ready to convert! ${file.name} loaded successfully</span>`;
+                    } catch (error) {
+                        console.error('Error processing Excel file:', error);
+                        statusDiv.innerHTML = `<span class="error">❌ Error processing file: ${error.message}</span>`;
+                        previewContainer.innerHTML = `<p style="text-align: center; color: #dc3545;">Error loading Excel file</p>`;
+                        convertBtn.disabled = true;
+                    }
+                };
+                
+                reader.onerror = function() {
+                    statusDiv.innerHTML = `<span class="error">❌ Error reading file</span>`;
+                    convertBtn.disabled = true;
+                };
+                
+                reader.readAsArrayBuffer(file);
+            }
+            
+            function generatePreview(data) {
+                if (!data || data.length === 0) {
+                    previewContainer.innerHTML = `<p style="text-align: center; color: #666;">No data found in Excel file</p>`;
+                    return;
+                }
+                
+                // Create table
+                let tableHTML = '<table><thead><tr>';
+                
+                // Add headers
+                const headers = data[0];
+                headers.forEach(header => {
+                    tableHTML += `<th>${header || ''}</th>`;
+                });
+                tableHTML += '</tr></thead><tbody>';
+                
+                // Add rows
+                for (let i = 1; i < data.length; i++) {
+                    const row = data[i];
+                    tableHTML += '<tr>';
+                    
+                    for (let j = 0; j < headers.length; j++) {
+                        const cell = j < row.length ? row[j] : '';
+                        tableHTML += `<td>${cell || ''}</td>`;
+                    }
+                    
+                    tableHTML += '</tr>';
+                }
+                
+                tableHTML += '</tbody></table>';
+                
+                previewContainer.innerHTML = tableHTML;
+            }
+            
+            function convertToPDF() {
+                if (!excelData || excelData.length === 0) {
+                    statusDiv.innerHTML = `<span class="error">❌ No data to convert</span>`;
+                    return;
+                }
+                
+                statusDiv.innerHTML = `<div class="spinner"></div> Converting to PDF...`;
+                
+                // Add a small delay to allow UI to update
+                setTimeout(() => {
+                    try {
+                        const { jsPDF } = window.jspdf;
+                        
+                        // Get settings
+                        const fontSize = parseInt(fontSizeSelect.value);
+                        const orientation = orientationSelect.value;
+                        const pageSize = pageSizeSelect.value;
+                        const letterPadSpace = parseInt(letterPadInput.value);
+                        
+                        // Create new PDF document
+                        const doc = new jsPDF({
+                            orientation: orientation,
+                            unit: 'pt',
+                            format: pageSize
+                        });
+                        
+                        // Set font
+                        doc.setFontSize(fontSize);
+                        
+                        // Prepare data for autoTable
+                        const headers = excelData[0];
+                        const body = excelData.slice(1);
+                        
+                        // Calculate startY position based on letter pad space
+                        const startY = letterPadSpace * 2.83465; // Convert mm to points (1mm = 2.83465pt)
+                        
+                        // Create PDF table
+                        doc.autoTable({
+                            head: [headers],
+                            body: body,
+                            startY: startY,
+                            margin: {top: 20},
+                            styles: {
+                                fontSize: fontSize,
+                                cellPadding: 6,
+                                overflow: 'linebreak'
+                            },
+                            headStyles: {
+                                fillColor: [26, 41, 128],
+                                textColor: 255,
+                                fontStyle: 'bold'
+                            },
+                            alternateRowStyles: {
+                                fillColor: [240, 240, 240]
+                            },
+                            tableWidth: 'auto',
+                            theme: 'grid'
+                        });
+                        
+                        // Add title with letter pad styling
+                        doc.setFontSize(16);
+                        doc.setFont("helvetica", "bold");
+                        doc.text(fileName, 40, startY - 15);
+                        
+                        // Add company info (simulated letter pad)
+                        doc.setFontSize(10);
+                        doc.setFont("helvetica", "normal");
+                        doc.text("ABC Corporation", 40, 30);
+                        doc.text("123 Business Street, Suite 100", 40, 45);
+                        doc.text("New York, NY 10001", 40, 60);
+                        
+                        // Add decorative line
+                        doc.setDrawColor(26, 41, 128);
+                        doc.setLineWidth(1.5);
+                        doc.line(40, startY - 25, doc.internal.pageSize.width - 40, startY - 25);
+                        
+                        // Save the PDF
+                        doc.save(`${fileName}.pdf`);
+                        
+                        statusDiv.innerHTML = `<span class="success">✅ PDF generated successfully! Download started.</span>`;
+                    } catch (error) {
+                        console.error('Error generating PDF:', error);
+                        statusDiv.innerHTML = `<span class="error">❌ Error generating PDF: ${error.message}</span>`;
+                    }
+                }, 500);
+            }
+        });
+    </script>
+</body>
+</html>
