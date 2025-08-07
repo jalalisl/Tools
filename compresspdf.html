@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PDF Compressor | Reduce PDF Size Online</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -625,21 +626,40 @@
                 }, 200);
                 
                 try {
-                    // Simulate processing delay
-                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    // Read the file as ArrayBuffer
+                    const fileReader = new FileReader();
+                    const filePromise = new Promise((resolve, reject) => {
+                        fileReader.onload = (e) => resolve(e.target.result);
+                        fileReader.onerror = (e) => reject(e);
+                    });
+                    fileReader.readAsArrayBuffer(currentFile);
+                    const fileData = await filePromise;
                     
-                    // Calculate compressed size based on settings
-                    const compressionFactor = compressionLevel.value / 100;
-                    const qualityFactor = imageQuality.value / 300;
-                    const colorFactor = colorMode.value === 'color' ? 1 : 
-                                        colorMode.value === 'grayscale' ? 0.7 : 0.4;
+                    // Load the PDF document
+                    const { PDFDocument } = PDFLib;
+                    const pdfDoc = await PDFDocument.load(fileData);
                     
-                    // Calculate compressed size (simulation)
-                    const compressedSizeValue = Math.max(
-                        originalFileSize * compressionFactor * qualityFactor * colorFactor,
-                        originalFileSize * 0.1
-                    );
+                    // Apply compression settings
+                    // Flatten form fields (if any)
+                    try {
+                        const form = pdfDoc.getForm();
+                        form.flatten();
+                    } catch (e) {
+                        console.log('No forms to flatten');
+                    }
                     
+                    // Set metadata
+                    pdfDoc.setTitle('Compressed PDF');
+                    pdfDoc.setProducer('PDF Compressor');
+                    
+                    // Save the compressed PDF
+                    const compressedBytes = await pdfDoc.save();
+                    
+                    // Create a blob from the compressed bytes
+                    compressedPDF = new Blob([compressedBytes], { type: 'application/pdf' });
+                    
+                    // Calculate compression statistics
+                    const compressedSizeValue = compressedPDF.size;
                     const reduction = ((originalFileSize - compressedSizeValue) / originalFileSize) * 100;
                     
                     // Update UI with results
@@ -647,16 +667,8 @@
                     reductionPercent.textContent = reduction.toFixed(1) + '%';
                     progressFill.style.width = '100%';
                     
-                    // Create a compressed file for download
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        // Create a new blob for the "compressed" file
-                        compressedPDF = new Blob([e.target.result], { type: 'application/pdf' });
-                        
-                        // Enable download button
-                        downloadBtn.disabled = false;
-                    };
-                    reader.readAsArrayBuffer(currentFile);
+                    // Enable download button
+                    downloadBtn.disabled = false;
                 } catch (error) {
                     console.error('Compression error:', error);
                     alert('Error compressing PDF: ' + error.message);
