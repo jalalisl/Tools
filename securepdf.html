@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure PDF Tool</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 400px;
+        }
+        h1 {
+            color: #333;
+        }
+        input[type="file"], input[type="password"], button {
+            margin: 10px 0;
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #status {
+            margin-top: 10px;
+            color: #666;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Secure PDF Tool</h1>
+        <p>Upload a PDF, set a password, and download the password-protected version.</p>
+        <input type="file" id="pdfInput" accept=".pdf">
+        <input type="password" id="passwordInput" placeholder="Enter password">
+        <button onclick="protectPDF()">Protect and Download</button>
+        <div id="status"></div>
+    </div>
+
+    <script>
+        async function encryptPDF(pdfDoc, password) {
+            pdfDoc.encrypt({
+                userPassword: password,
+                ownerPassword: password,
+                permissions: {
+                    printing: 'highResolution',
+                    modifying: false,
+                    copying: false,
+                    annotating: false,
+                    fillingForms: false,
+                    contentAccessibility: false,
+                    documentAssembly: false,
+                },
+            });
+        }
+
+        async function protectPDF() {
+            const status = document.getElementById('status');
+            status.textContent = 'Processing...';
+
+            const pdfInput = document.getElementById('pdfInput');
+            const password = document.getElementById('passwordInput').value;
+
+            if (!pdfInput.files.length) {
+                status.textContent = 'Please upload a PDF file.';
+                return;
+            }
+            if (!password) {
+                status.textContent = 'Please enter a password.';
+                return;
+            }
+
+            try {
+                const file = pdfInput.files[0];
+                const arrayBuffer = await file.arrayBuffer();
+                const pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer);
+
+                await encryptPDF(pdfDoc, password);
+
+                const pdfBytes = await pdfDoc.save();
+
+                const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'protected_' + file.name;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+                status.textContent = 'PDF protected and downloaded successfully!';
+            } catch (error) {
+                console.error(error);
+                status.textContent = 'Error: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>
