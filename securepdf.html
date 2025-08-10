@@ -58,22 +58,6 @@
     </div>
 
     <script>
-        async function encryptPDF(pdfDoc, password) {
-            pdfDoc.encrypt({
-                userPassword: password,
-                ownerPassword: password,
-                permissions: {
-                    printing: 'highResolution',
-                    modifying: false,
-                    copying: false,
-                    annotating: false,
-                    fillingForms: false,
-                    contentAccessibility: false,
-                    documentAssembly: false,
-                },
-            });
-        }
-
         async function protectPDF() {
             const status = document.getElementById('status');
             status.textContent = 'Processing...';
@@ -95,9 +79,21 @@
                 const arrayBuffer = await file.arrayBuffer();
                 const pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer);
 
-                await encryptPDF(pdfDoc, password);
-
-                const pdfBytes = await pdfDoc.save();
+                const pdfBytes = await pdfDoc.save({
+                    useObjectStreams: false,
+                    addDefaultPage: false,
+                    userPassword: password,
+                    ownerPassword: password,
+                    permissions: {
+                        printing: 'highResolution',
+                        modifying: false,
+                        copying: false,
+                        annotating: false,
+                        fillingForms: false,
+                        contentAccessibility: false,
+                        documentAssembly: false,
+                    },
+                });
 
                 const blob = new Blob([pdfBytes], { type: 'application/pdf' });
                 const url = URL.createObjectURL(blob);
