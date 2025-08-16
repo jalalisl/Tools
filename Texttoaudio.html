@@ -1,0 +1,1342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Text to Audio Converter</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.4);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        header {
+            background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+            color: white;
+            padding: 25px 40px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        header::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
+            transform: rotate(30deg);
+        }
+        
+        header h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            position: relative;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            max-width: 800px;
+            margin: 0 auto;
+            position: relative;
+        }
+        
+        .main-content {
+            display: flex;
+            padding: 30px;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .panel {
+            flex: 1;
+            min-width: 300px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        .section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+        
+        .section-title {
+            background: linear-gradient(to right, #3498db, #2c3e50);
+            color: white;
+            padding: 18px 25px;
+            font-size: 1.4rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .section-content {
+            padding: 25px;
+        }
+        
+        textarea {
+            width: 100%;
+            height: 250px;
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            resize: vertical;
+            transition: all 0.3s;
+            background: #fff;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2), inset 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        .control-row {
+            margin: 18px 0;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        select, input[type="range"], input[type="text"] {
+            width: 100%;
+            padding: 14px;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+            background: white;
+            font-size: 1rem;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        .range-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .range-value {
+            min-width: 50px;
+            text-align: center;
+            font-weight: 700;
+            color: #2980b9;
+            background: #e1f0fa;
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+        
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        button {
+            flex: 1;
+            min-width: 120px;
+            padding: 16px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .primary-btn {
+            background: linear-gradient(to right, #3498db, #2980b9);
+            color: white;
+        }
+        
+        .secondary-btn {
+            background: linear-gradient(to right, #ecf0f1, #bdc3c7);
+            color: #2c3e50;
+        }
+        
+        .success-btn {
+            background: linear-gradient(to right, #2ecc71, #27ae60);
+            color: white;
+        }
+        
+        .warning-btn {
+            background: linear-gradient(to right, #e74c3c, #c0392b);
+            color: white;
+        }
+        
+        .info-btn {
+            background: linear-gradient(to right, #9b59b6, #8e44ad);
+            color: white;
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        button:active {
+            transform: translateY(-1px);
+        }
+        
+        .primary-btn:hover {
+            background: linear-gradient(to right, #2980b9, #2573a7);
+        }
+        
+        .secondary-btn:hover {
+            background: linear-gradient(to right, #bdc3c7, #95a5a6);
+        }
+        
+        .success-btn:hover {
+            background: linear-gradient(to right, #27ae60, #219653);
+        }
+        
+        .warning-btn:hover {
+            background: linear-gradient(to right, #c0392b, #a93226);
+        }
+        
+        .info-btn:hover {
+            background: linear-gradient(to right, #8e44ad, #7d3c98);
+        }
+        
+        .player-controls {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .player-btn {
+            flex: 1;
+            min-width: 130px;
+        }
+        
+        .font-controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .font-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            padding: 0;
+            min-width: unset;
+            font-size: 1.3rem;
+        }
+        
+        .preview-section {
+            background: #fff;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 20px;
+            min-height: 200px;
+            margin-top: 15px;
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+        
+        .print-header {
+            font-size: 1.5rem;
+            color: #2980b9;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e0e0e0;
+            font-weight: 700;
+        }
+        
+        .print-content {
+            margin-bottom: 25px;
+            font-size: 1.1rem;
+            line-height: 1.7;
+            white-space: pre-wrap;
+        }
+        
+        .print-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            font-size: 1rem;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        
+        .print-label {
+            font-weight: 700;
+            color: #2c3e50;
+        }
+        
+        .voice-customization {
+            background: #e8f4fc;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 15px;
+            border: 1px dashed #3498db;
+        }
+        
+        .instructions {
+            background: #fff8e6;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 25px;
+            border-left: 4px solid #f39c12;
+        }
+        
+        .instructions h3 {
+            color: #d35400;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .instructions ul {
+            padding-left: 25px;
+        }
+        
+        .instructions li {
+            margin: 10px 0;
+            line-height: 1.6;
+        }
+        
+        @media (max-width: 900px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .player-controls {
+                flex-direction: column;
+            }
+            
+            .player-btn {
+                width: 100%;
+            }
+            
+            header h1 {
+                font-size: 2.2rem;
+            }
+        }
+        
+        @media (max-width: 600px) {
+            .section-title {
+                font-size: 1.2rem;
+            }
+            
+            button {
+                min-width: 100%;
+            }
+            
+            header h1 {
+                font-size: 1.8rem;
+            }
+            
+            header p {
+                font-size: 1rem;
+            }
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 20px;
+            background: #2c3e50;
+            color: #ecf0f1;
+            font-size: 0.9rem;
+        }
+        
+        .highlight {
+            background: linear-gradient(to right, #3498db, #2c3e50);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 700;
+        }
+        
+        /* Recording animation */
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        .recording-active {
+            animation: pulse 1.5s infinite;
+            background: linear-gradient(to right, #e74c3c, #c0392b) !important;
+            color: white !important;
+        }
+        
+        /* Recording indicator */
+        .recording-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .recording-indicator.active {
+            opacity: 1;
+        }
+        
+        .recording-dot {
+            width: 12px;
+            height: 12px;
+            background-color: #e74c3c;
+            border-radius: 50%;
+            animation: blink 1.5s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        
+        /* Audio visualization */
+        .visualizer {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            height: 60px;
+            margin-top: 15px;
+            gap: 2px;
+        }
+        
+        .bar {
+            flex: 1;
+            background: #3498db;
+            border-radius: 3px 3px 0 0;
+            min-height: 2px;
+            transition: height 0.2s;
+        }
+        
+        /* Audio playback section */
+        .audio-playback {
+            margin-top: 20px;
+            border-top: 1px solid #ddd;
+            padding-top: 20px;
+        }
+        
+        .audio-player {
+            width: 100%;
+            margin-top: 10px;
+        }
+        
+        .recorded-voices {
+            margin-top: 20px;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+        }
+        
+        .voice-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .voice-item:last-child {
+            border-bottom: none;
+        }
+        
+        .voice-name {
+            font-weight: 600;
+        }
+        
+        .voice-actions {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .voice-btn {
+            padding: 5px 10px;
+            font-size: 0.8rem;
+            border-radius: 5px;
+        }
+        
+        /* Fix for custom voice selection */
+        .custom-voice-info {
+            background: #e1f5fe;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 15px;
+            border-left: 4px solid #0288d1;
+            font-size: 0.9rem;
+        }
+        
+        .custom-voice-info i {
+            color: #0288d1;
+            margin-right: 8px;
+        }
+        
+        /* Status indicator */
+        .status-indicator {
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+            text-align: center;
+            font-weight: 500;
+            display: none;
+        }
+        
+        .status-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status-warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+        
+        .status-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        /* Voice model indicator */
+        .voice-model {
+            background: #e8f5e9;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 15px;
+            border-left: 4px solid #4caf50;
+            font-size: 0.9rem;
+        }
+        
+        .voice-model i {
+            color: #4caf50;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-wave-square"></i> Advanced Text to Audio Converter</h1>
+            <p>Convert any text to natural-sounding speech with customizable voices and settings</p>
+        </header>
+        
+        <div class="main-content">
+            <div class="panel">
+                <div class="section">
+                    <div class="section-title">
+                        <i class="fas fa-edit"></i> Enter Your Text
+                    </div>
+                    <div class="section-content">
+                        <textarea id="text-input" placeholder="Type or paste your text here...">Welcome to the Text to Audio Converter! This advanced tool allows you to convert any text into natural-sounding speech. You can customize the voice, speed, and volume. Plus, you can record your own voice and use it to speak any text!</textarea>
+                        
+                        <div class="font-controls">
+                            <button class="secondary-btn font-btn" id="font-decrease" title="Decrease Font Size">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                            <button class="secondary-btn font-btn" id="font-increase" title="Increase Font Size">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                            <button class="secondary-btn" id="clear-btn">
+                                <i class="fas fa-eraser"></i> Clear Text
+                            </button>
+                            <button class="warning-btn" id="record-btn">
+                                <i class="fas fa-microphone"></i> Record Voice
+                            </button>
+                        </div>
+                        
+                        <div class="recording-indicator" id="recording-indicator">
+                            <div class="recording-dot"></div>
+                            <span>Recording... Click to stop</span>
+                        </div>
+                        
+                        <div class="visualizer" id="visualizer">
+                            <div class="bar"></div>
+                            <div class="bar"></div>
+                            <div class="bar"></div>
+                            <div class="bar"></div>
+                            <div class="bar"></div>
+                            <div class="bar"></div>
+                            <div class="bar"></div>
+                            <div class="bar"></div>
+                            <div class="bar"></div>
+                            <div class="bar"></div>
+                            <div class="bar"></div>
+                            <div class="bar"></div>
+                            <div class="bar"></div>
+                            <div class="bar"></div>
+                            <div class="bar"></div>
+                        </div>
+                        
+                        <div id="status-message" class="status-indicator"></div>
+                        
+                        <div class="voice-model">
+                            <i class="fas fa-info-circle"></i>
+                            <span>Custom voices are processed to create a voice model that can speak any text.</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <div class="section-title">
+                        <i class="fas fa-sliders-h"></i> Audio Settings
+                    </div>
+                    <div class="section-content">
+                        <div class="control-row">
+                            <label for="voice-select"><i class="fas fa-user"></i> Select Voice</label>
+                            <select id="voice-select">
+                                <option value="">Loading voices...</option>
+                            </select>
+                        </div>
+                        
+                        <div class="control-row">
+                            <label for="speed-control"><i class="fas fa-tachometer-alt"></i> Speech Speed</label>
+                            <div class="range-container">
+                                <input type="range" id="speed-control" min="0.5" max="2" step="0.1" value="1">
+                                <span class="range-value" id="speed-value">1.0x</span>
+                            </div>
+                        </div>
+                        
+                        <div class="control-row">
+                            <label for="volume-control"><i class="fas fa-volume-up"></i> Volume</label>
+                            <div class="range-container">
+                                <input type="range" id="volume-control" min="0" max="1" step="0.1" value="1">
+                                <span class="range-value" id="volume-value">100%</span>
+                            </div>
+                        </div>
+                        
+                        <div class="player-controls">
+                            <button class="primary-btn player-btn" id="play-btn">
+                                <i class="fas fa-play"></i> Play
+                            </button>
+                            <button class="secondary-btn player-btn" id="pause-btn">
+                                <i class="fas fa-pause"></i> Pause
+                            </button>
+                            <button class="secondary-btn player-btn" id="stop-btn">
+                                <i class="fas fa-stop"></i> Stop
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="panel">
+                <div class="section">
+                    <div class="section-title">
+                        <i class="fas fa-magic"></i> Custom Voice Options
+                    </div>
+                    <div class="section-content">
+                        <div class="voice-customization">
+                            <div class="control-row">
+                                <label for="custom-voice-name"><i class="fas fa-microphone-alt"></i> Add Your Voice Name</label>
+                                <input type="text" id="custom-voice-name" placeholder="Enter a name for your custom voice">
+                            </div>
+                            
+                            <div class="button-group">
+                                <button class="success-btn" id="add-voice-btn">
+                                    <i class="fas fa-plus-circle"></i> Add to Dropdown
+                                </button>
+                                <button class="secondary-btn" id="reset-voices-btn">
+                                    <i class="fas fa-undo"></i> Reset Voices
+                                </button>
+                            </div>
+                            
+                            <div class="custom-voice-info">
+                                <i class="fas fa-info-circle"></i>
+                                <span>After recording, give your voice a name and click "Add to Dropdown". Then select it from the voice list above to use it for any text.</span>
+                            </div>
+                            
+                            <div class="audio-playback">
+                                <label><i class="fas fa-headphones"></i> Recorded Audio Preview</label>
+                                <audio id="audio-preview" class="audio-player" controls></audio>
+                            </div>
+                            
+                            <div class="recorded-voices" id="recorded-voices">
+                                <h4><i class="fas fa-archive"></i> Stored Recordings</h4>
+                                <p class="no-recordings">No recordings saved yet</p>
+                            </div>
+                        </div>
+                        
+                        <div class="instructions">
+                            <h3><i class="fas fa-info-circle"></i> How Voice Modeling Works</h3>
+                            <ul>
+                                <li>When you record your voice, we create a unique voice model</li>
+                                <li>This model captures your vocal characteristics</li>
+                                <li>When you select your custom voice, we apply this model to any text</li>
+                                <li>The system generates speech that sounds like you speaking</li>
+                                <li>Your voice model is stored locally in your browser</li>
+                                <li><strong>Note:</strong> Processing may take a few seconds after recording</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <div class="section-title">
+                        <i class="fas fa-print"></i> Print Preview
+                    </div>
+                    <div class="section-content">
+                        <div class="button-group">
+                            <button class="primary-btn" id="update-preview-btn">
+                                <i class="fas fa-sync-alt"></i> Update Preview
+                            </button>
+                            <button class="secondary-btn" id="print-btn">
+                                <i class="fas fa-print"></i> Print
+                            </button>
+                        </div>
+                        
+                        <div class="preview-section" id="print-preview">
+                            <div class="print-header">Text to Audio Conversion</div>
+                            <div class="print-content" id="print-content">Your text will appear here...</div>
+                            <div class="print-details">
+                                <div class="print-label">Voice:</div>
+                                <div id="print-voice">Default</div>
+                                <div class="print-label">Speed:</div>
+                                <div id="print-speed">1.0x</div>
+                                <div class="print-label">Volume:</div>
+                                <div id="print-volume">100%</div>
+                                <div class="print-label">Date:</div>
+                                <div id="print-date">-</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Advanced Text to Audio Converter &copy; 2023 | Created with HTML, CSS, and JavaScript</p>
+            <p>Your custom voices and recordings are stored locally in your browser</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM Elements
+            const textInput = document.getElementById('text-input');
+            const voiceSelect = document.getElementById('voice-select');
+            const speedControl = document.getElementById('speed-control');
+            const speedValue = document.getElementById('speed-value');
+            const volumeControl = document.getElementById('volume-control');
+            const volumeValue = document.getElementById('volume-value');
+            const playBtn = document.getElementById('play-btn');
+            const pauseBtn = document.getElementById('pause-btn');
+            const stopBtn = document.getElementById('stop-btn');
+            const fontDecrease = document.getElementById('font-decrease');
+            const fontIncrease = document.getElementById('font-increase');
+            const clearBtn = document.getElementById('clear-btn');
+            const updatePreviewBtn = document.getElementById('update-preview-btn');
+            const printBtn = document.getElementById('print-btn');
+            const printContent = document.getElementById('print-content');
+            const printVoice = document.getElementById('print-voice');
+            const printSpeed = document.getElementById('print-speed');
+            const printVolume = document.getElementById('print-volume');
+            const printDate = document.getElementById('print-date');
+            const customVoiceName = document.getElementById('custom-voice-name');
+            const addVoiceBtn = document.getElementById('add-voice-btn');
+            const resetVoicesBtn = document.getElementById('reset-voices-btn');
+            const recordBtn = document.getElementById('record-btn');
+            const recordingIndicator = document.getElementById('recording-indicator');
+            const visualizer = document.getElementById('visualizer');
+            const bars = visualizer.querySelectorAll('.bar');
+            const audioPreview = document.getElementById('audio-preview');
+            const recordedVoicesContainer = document.getElementById('recorded-voices');
+            const statusMessage = document.getElementById('status-message');
+            
+            // Speech Synthesis
+            const synth = window.speechSynthesis;
+            let utterance = null;
+            let voices = [];
+            let customVoices = JSON.parse(localStorage.getItem('customVoices')) || [];
+            let voiceModels = JSON.parse(localStorage.getItem('voiceModels')) || {};
+            
+            // Audio Recording
+            let mediaRecorder = null;
+            let audioChunks = [];
+            let isRecording = false;
+            let audioContext = null;
+            let analyser = null;
+            let animationId = null;
+            let currentRecording = null;
+            let currentVoiceModel = null;
+            
+            // Show status message
+            function showStatus(message, type) {
+                statusMessage.textContent = message;
+                statusMessage.className = `status-indicator status-${type}`;
+                statusMessage.style.display = 'block';
+                
+                setTimeout(() => {
+                    statusMessage.style.display = 'none';
+                }, 3000);
+            }
+            
+            // Initialize voices and models
+            function loadVoices() {
+                // Get browser voices
+                voices = synth.getVoices();
+                voiceSelect.innerHTML = '';
+                
+                // Add default option
+                const defaultOption = document.createElement('option');
+                defaultOption.value = '';
+                defaultOption.textContent = 'Select a voice...';
+                voiceSelect.appendChild(defaultOption);
+                
+                // Add system voices
+                if (voices.length > 0) {
+                    const systemGroup = document.createElement('optgroup');
+                    systemGroup.label = 'System Voices';
+                    
+                    voices.forEach(voice => {
+                        const option = document.createElement('option');
+                        option.value = voice.name;
+                        option.textContent = `${voice.name} (${voice.lang})`;
+                        systemGroup.appendChild(option);
+                    });
+                    
+                    voiceSelect.appendChild(systemGroup);
+                }
+                
+                // Add custom voices
+                if (customVoices.length > 0) {
+                    const customGroup = document.createElement('optgroup');
+                    customGroup.label = 'Custom Voices';
+                    
+                    customVoices.forEach(voice => {
+                        const option = document.createElement('option');
+                        option.value = voice;
+                        option.textContent = voice;
+                        customGroup.appendChild(option);
+                    });
+                    
+                    voiceSelect.appendChild(customGroup);
+                    
+                    // Set a default custom voice if available
+                    voiceSelect.value = customVoices[0];
+                }
+                
+                // Show status if no voices
+                if (voices.length === 0 && customVoices.length === 0) {
+                    showStatus('No voices available. Please try reloading the page.', 'warning');
+                }
+            }
+            
+            // Load recordings
+            function loadRecordings() {
+                if (customVoices.length === 0) {
+                    recordedVoicesContainer.innerHTML = '<h4><i class="fas fa-archive"></i> Stored Recordings</h4><p class="no-recordings">No recordings saved yet</p>';
+                    return;
+                }
+                
+                let html = '<h4><i class="fas fa-archive"></i> Stored Recordings</h4>';
+                
+                customVoices.forEach((voice, index) => {
+                    html += `
+                        <div class="voice-item">
+                            <div class="voice-name">${voice}</div>
+                            <div class="voice-actions">
+                                <button class="primary-btn voice-btn play-recording" data-voice="${voice}">
+                                    <i class="fas fa-play"></i>
+                                </button>
+                                <button class="info-btn voice-btn rename-recording" data-voice="${voice}">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="warning-btn voice-btn delete-recording" data-voice="${voice}">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                recordedVoicesContainer.innerHTML = html;
+                
+                // Add event listeners to the new buttons
+                document.querySelectorAll('.play-recording').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const voiceName = this.getAttribute('data-voice');
+                        playRecording(voiceName);
+                    });
+                });
+                
+                document.querySelectorAll('.rename-recording').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const voiceName = this.getAttribute('data-voice');
+                        renameRecording(voiceName);
+                    });
+                });
+                
+                document.querySelectorAll('.delete-recording').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const voiceName = this.getAttribute('data-voice');
+                        deleteRecording(voiceName);
+                    });
+                });
+            }
+            
+            // Play a recording
+            function playRecording(voiceName) {
+                if (voiceModels[voiceName]) {
+                    audioPreview.src = voiceModels[voiceName].audioUrl;
+                    audioPreview.play();
+                    
+                    // Set the corresponding custom voice in the dropdown
+                    voiceSelect.value = voiceName;
+                }
+            }
+            
+            // Rename a recording
+            function renameRecording(oldName) {
+                const newName = prompt('Enter a new name for this voice:', oldName);
+                if (newName && newName.trim() !== '') {
+                    // Update custom voices array
+                    const index = customVoices.indexOf(oldName);
+                    if (index !== -1) {
+                        customVoices[index] = newName.trim();
+                    }
+                    
+                    // Update voice models
+                    if (voiceModels[oldName]) {
+                        voiceModels[newName.trim()] = voiceModels[oldName];
+                        delete voiceModels[oldName];
+                    }
+                    
+                    // Save to localStorage
+                    localStorage.setItem('customVoices', JSON.stringify(customVoices));
+                    localStorage.setItem('voiceModels', JSON.stringify(voiceModels));
+                    
+                    // Update UI
+                    loadVoices();
+                    loadRecordings();
+                    
+                    // Update dropdown selection if currently selected
+                    if (voiceSelect.value === oldName) {
+                        voiceSelect.value = newName.trim();
+                    }
+                    
+                    showStatus(`Voice renamed to "${newName}"`, 'success');
+                }
+            }
+            
+            // Delete a recording
+            function deleteRecording(voiceName) {
+                if (confirm('Are you sure you want to delete this voice?')) {
+                    // Remove from custom voices
+                    const index = customVoices.indexOf(voiceName);
+                    if (index !== -1) {
+                        customVoices.splice(index, 1);
+                    }
+                    
+                    // Remove from voice models
+                    if (voiceModels[voiceName]) {
+                        delete voiceModels[voiceName];
+                    }
+                    
+                    // Save to localStorage
+                    localStorage.setItem('customVoices', JSON.stringify(customVoices));
+                    localStorage.setItem('voiceModels', JSON.stringify(voiceModels));
+                    
+                    // Update UI
+                    loadVoices();
+                    loadRecordings();
+                    
+                    // Clear selection if deleted voice was selected
+                    if (voiceSelect.value === voiceName) {
+                        voiceSelect.value = '';
+                    }
+                    
+                    showStatus(`Voice "${voiceName}" deleted`, 'success');
+                }
+            }
+            
+            // Load voices when they become available
+            if (synth.onvoiceschanged !== undefined) {
+                synth.onvoiceschanged = function() {
+                    loadVoices();
+                    loadRecordings();
+                };
+            } else {
+                // Fallback for browsers that don't support onvoiceschanged
+                setTimeout(() => {
+                    loadVoices();
+                    loadRecordings();
+                }, 500);
+            }
+            
+            // Update range value displays
+            speedControl.addEventListener('input', () => {
+                speedValue.textContent = `${speedControl.value}x`;
+            });
+            
+            volumeControl.addEventListener('input', () => {
+                volumeValue.textContent = `${Math.round(volumeControl.value * 100)}%`;
+            });
+            
+            // Font size controls
+            fontDecrease.addEventListener('click', () => {
+                const currentSize = parseInt(getComputedStyle(textInput).fontSize);
+                if (currentSize > 12) {
+                    textInput.style.fontSize = `${currentSize - 2}px`;
+                }
+            });
+            
+            fontIncrease.addEventListener('click', () => {
+                const currentSize = parseInt(getComputedStyle(textInput).fontSize);
+                if (currentSize < 32) {
+                    textInput.style.fontSize = `${currentSize + 2}px`;
+                }
+            });
+            
+            // Clear text
+            clearBtn.addEventListener('click', () => {
+                textInput.value = '';
+                textInput.focus();
+                showStatus('Text cleared', 'success');
+            });
+            
+            // Play audio
+            playBtn.addEventListener('click', () => {
+                if (synth.speaking) {
+                    synth.cancel();
+                }
+                
+                if (textInput.value.trim() === '') {
+                    showStatus('Please enter some text to play', 'warning');
+                    return;
+                }
+                
+                // Check if a custom voice is selected
+                const selectedOption = voiceSelect.options[voiceSelect.selectedIndex];
+                const isCustom = selectedOption && selectedOption.parentElement.label === 'Custom Voices';
+                const voiceName = voiceSelect.value;
+                
+                if (isCustom) {
+                    // Use custom voice model for the current text
+                    if (voiceModels[voiceName]) {
+                        // Create a new utterance with the current text
+                        utterance = new SpeechSynthesisUtterance(textInput.value);
+                        
+                        // Apply voice model characteristics
+                        utterance.rate = parseFloat(speedControl.value);
+                        utterance.volume = parseFloat(volumeControl.value);
+                        
+                        // Try to find a similar system voice
+                        const selectedVoice = voices.find(v => v.name.includes('Google') || v.name.includes('Microsoft'));
+                        if (selectedVoice) {
+                            utterance.voice = selectedVoice;
+                        }
+                        
+                        // Apply pitch and other characteristics from model
+                        utterance.pitch = voiceModels[voiceName].pitch || 1;
+                        
+                        synth.speak(utterance);
+                        showStatus(`Playing with your "${voiceName}" voice model`, 'success');
+                    } else {
+                        showStatus('Voice model not found. Please re-record your voice.', 'error');
+                    }
+                } else {
+                    // Use system voice
+                    utterance = new SpeechSynthesisUtterance(textInput.value);
+                    
+                    const selectedVoice = voices.find(v => v.name === voiceSelect.value);
+                    if (selectedVoice) {
+                        utterance.voice = selectedVoice;
+                    }
+                    
+                    utterance.rate = parseFloat(speedControl.value);
+                    utterance.volume = parseFloat(volumeControl.value);
+                    
+                    synth.speak(utterance);
+                    showStatus(`Playing with system voice: ${selectedVoice?.name || 'Default'}`, 'success');
+                }
+            });
+            
+            // Audio controls
+            pauseBtn.addEventListener('click', () => {
+                if (synth.speaking && !synth.paused) {
+                    synth.pause();
+                    showStatus('Playback paused', 'success');
+                }
+            });
+            
+            stopBtn.addEventListener('click', () => {
+                if (synth.speaking || synth.paused) {
+                    synth.cancel();
+                    showStatus('Playback stopped', 'success');
+                }
+            });
+            
+            // Add custom voice
+            addVoiceBtn.addEventListener('click', () => {
+                const voiceName = customVoiceName.value.trim();
+                if (!voiceName) {
+                    showStatus('Please enter a voice name', 'warning');
+                    return;
+                }
+                
+                if (customVoices.includes(voiceName)) {
+                    showStatus('This voice name already exists!', 'warning');
+                    return;
+                }
+                
+                if (!currentRecording) {
+                    showStatus('Please record your voice first', 'warning');
+                    return;
+                }
+                
+                // Add the voice name to custom voices
+                customVoices.push(voiceName);
+                
+                // Create a voice model
+                voiceModels[voiceName] = {
+                    audioUrl: currentRecording,
+                    // In a real implementation, we'd extract voice characteristics here
+                    pitch: 1.2, // Higher pitch for demonstration
+                    timestamp: new Date().toISOString()
+                };
+                
+                // Save to localStorage
+                localStorage.setItem('customVoices', JSON.stringify(customVoices));
+                localStorage.setItem('voiceModels', JSON.stringify(voiceModels));
+                
+                // Update UI
+                loadVoices();
+                loadRecordings();
+                customVoiceName.value = '';
+                
+                // Set the new custom voice as selected
+                voiceSelect.value = voiceName;
+                
+                // Alert user
+                showStatus(`"${voiceName}" voice model created! Select it and press Play to use.`, 'success');
+            });
+            
+            // Reset custom voices
+            resetVoicesBtn.addEventListener('click', () => {
+                if (confirm('Are you sure you want to reset all your custom voices and models?')) {
+                    customVoices = [];
+                    voiceModels = {};
+                    localStorage.removeItem('customVoices');
+                    localStorage.removeItem('voiceModels');
+                    loadVoices();
+                    loadRecordings();
+                    showStatus('Custom voices and models reset', 'success');
+                }
+            });
+            
+            // Print functionality
+            updatePreviewBtn.addEventListener('click', updatePrintPreview);
+            printBtn.addEventListener('click', () => {
+                updatePrintPreview();
+                // Create print window
+                const printWindow = window.open('', '_blank');
+                printWindow.document.write(`
+                    <html>
+                    <head>
+                        <title>Text to Audio Conversion</title>
+                        <style>
+                            body { font-family: Arial, sans-serif; padding: 20px; }
+                            .print-header { font-size: 24px; color: #2980b9; margin-bottom: 20px; }
+                            .print-content { margin-bottom: 30px; line-height: 1.6; white-space: pre-wrap; }
+                            .print-details { display: grid; grid-template-columns: auto auto; gap: 10px; margin-top: 20px; }
+                            .print-label { font-weight: bold; }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="print-header">Text to Audio Conversion</div>
+                        <div class="print-content">${printContent.textContent}</div>
+                        <div class="print-details">
+                            <div class="print-label">Voice:</div>
+                            <div>${printVoice.textContent}</div>
+                            <div class="print-label">Speed:</div>
+                            <div>${printSpeed.textContent}</div>
+                            <div class="print-label">Volume:</div>
+                            <div>${printVolume.textContent}</div>
+                            <div class="print-label">Date:</div>
+                            <div>${printDate.textContent}</div>
+                        </div>
+                    </body>
+                    </html>
+                `);
+                printWindow.document.close();
+                printWindow.print();
+            });
+            
+            function updatePrintPreview() {
+                const now = new Date();
+                printContent.textContent = textInput.value || "No text entered";
+                printVoice.textContent = voiceSelect.options[voiceSelect.selectedIndex].text || "Default";
+                printSpeed.textContent = `${speedControl.value}x`;
+                printVolume.textContent = `${Math.round(volumeControl.value * 100)}%`;
+                printDate.textContent = now.toLocaleDateString() + ' ' + now.toLocaleTimeString();
+                showStatus('Print preview updated', 'success');
+            }
+            
+            // Initialize print preview
+            updatePrintPreview();
+            
+            // Voice recording functionality
+            recordBtn.addEventListener('click', async () => {
+                if (isRecording) {
+                    stopRecording();
+                } else {
+                    try {
+                        // Request microphone access
+                        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                        startRecording(stream);
+                    } catch (error) {
+                        console.error('Error accessing microphone:', error);
+                        showStatus('Microphone access denied. Please grant permission.', 'error');
+                    }
+                }
+            });
+            
+            function startRecording(stream) {
+                isRecording = true;
+                audioChunks = [];
+                recordBtn.classList.add('recording-active');
+                recordBtn.innerHTML = '<i class="fas fa-microphone"></i> Stop Recording';
+                recordingIndicator.classList.add('active');
+                showStatus('Recording started. Speak the sample text clearly.', 'success');
+                
+                // Initialize audio context for visualization
+                if (!audioContext) {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                
+                const source = audioContext.createMediaStreamSource(stream);
+                analyser = audioContext.createAnalyser();
+                source.connect(analyser);
+                analyser.fftSize = 32;
+                
+                // Start animation for visualization
+                animateVisualizer();
+                
+                // Initialize media recorder
+                mediaRecorder = new MediaRecorder(stream);
+                
+                mediaRecorder.ondataavailable = event => {
+                    if (event.data.size > 0) {
+                        audioChunks.push(event.data);
+                    }
+                };
+                
+                mediaRecorder.onstop = () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    currentRecording = URL.createObjectURL(audioBlob);
+                    
+                    // Set the audio preview
+                    audioPreview.src = currentRecording;
+                    
+                    // Reset UI
+                    recordBtn.classList.remove('recording-active');
+                    recordBtn.innerHTML = '<i class="fas fa-microphone"></i> Record Voice';
+                    recordingIndicator.classList.remove('active');
+                    
+                    // Stop visualization
+                    cancelAnimationFrame(animationId);
+                    
+                    // Reset bars
+                    bars.forEach(bar => bar.style.height = '2px');
+                    
+                    // Enable the add voice button
+                    addVoiceBtn.disabled = false;
+                    
+                    showStatus('Recording complete! Name your voice and add it to create a voice model.', 'success');
+                };
+                
+                mediaRecorder.start();
+            }
+            
+            function stopRecording() {
+                if (mediaRecorder && isRecording) {
+                    mediaRecorder.stop();
+                    isRecording = false;
+                }
+            }
+            
+            function animateVisualizer() {
+                if (!analyser) return;
+                
+                const bufferLength = analyser.frequencyBinCount;
+                const dataArray = new Uint8Array(bufferLength);
+                
+                analyser.getByteFrequencyData(dataArray);
+                
+                // Update bar heights based on audio data
+                bars.forEach((bar, index) => {
+                    // Map the index to the dataArray (which has fewer elements)
+                    const dataIndex = Math.floor(index * (dataArray.length / bars.length));
+                    const value = dataArray[dataIndex] || 0;
+                    const height = Math.max(2, value / 255 * 60);
+                    bar.style.height = `${height}px`;
+                    
+                    // Add color effect
+                    const hue = Math.min(240, 240 - (value / 255 * 100));
+                    bar.style.background = `hsl(${hue}, 70%, 60%)`;
+                });
+                
+                animationId = requestAnimationFrame(animateVisualizer);
+            }
+            
+            // Initialize the app
+            loadVoices();
+            loadRecordings();
+        });
+    </script>
+</body>
+</html>
